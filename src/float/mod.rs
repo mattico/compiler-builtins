@@ -6,7 +6,7 @@ pub mod add;
 pub trait Float: Sized {
     /// A uint of the same with as the float
     type Int;
-    
+
     /// Returns the bitwidth of the float type
     fn bits() -> u32;
 
@@ -16,11 +16,14 @@ pub trait Float: Sized {
     /// Returns the bitwidth of the significand
     fn significand_bits() -> u32;
 
-    /// Returns `self` transmuted to `Self::Int`
-    fn repr(self) -> Self::Int;
+    /// Returns a mask for the sign bit of `self`
+    fn sign_mask() -> Self::Int;
 
-    /// Returns a `Self::Int` transmuted back to `Self` 
-    fn from_repr(a: Self::Int) -> Self;
+    /// Returns a mask for the exponent portion of `self`
+    fn exponent_mask() -> Self::Int;
+
+    /// Returns a mask for the significand portion of `self`
+    fn significand_mask() -> Self::Int;
 
     /// Returns the sign bit of `self`
     fn sign(self) -> bool;
@@ -30,6 +33,15 @@ pub trait Float: Sized {
 
     /// Returns the significand portion of `self`
     fn significand(self) -> Self::Int;
+
+    /// Returns `self` transmuted to `Self::Int`
+    fn repr(self) -> Self::Int;
+
+    /// Returns a `Self::Int` transmuted back to `Self`
+    fn from_repr(a: Self::Int) -> Self;
+
+    /// Constructs a `Self` from its parts
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self;
 
     /// Returns (normalized exponent, normalized significand)
     fn normalize(significand: Self::Int) -> (i32, Self::Int);
@@ -46,21 +58,34 @@ impl Float for f32 {
     fn significand_bits() -> u32 {
         23
     }
+    fn sign_mask() -> Self::Int {
+        1 << (Self::bits() - 1)
+    }
+    fn exponent_mask() -> Self::Int {
+        ((1 << Self::exponent_bits()) - 1) << Self::significand_bits()
+    }
+    fn significand_mask() -> Self::Int {
+        (1 << Self::significand_bits()) - 1
+    }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
     }
     fn from_repr(a: Self::Int) -> Self {
         unsafe { mem::transmute(a) }
     }
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+        Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
+            exponent & Self::exponent_mask() |
+            significand & Self::significand_mask())
+    }
     fn sign(self) -> bool {
-        (self.repr() & 1 << Self::bits()) != 0
+        (self.repr() & Self::sign_mask()) != 0
     }
     fn exponent(self) -> Self::Int {
-        self.repr() >> Self::significand_bits()
-            & ((1 << Self::exponent_bits()) - 1)
+        self.repr() >> Self::significand_bits() & Self::exponent_mask()
     }
     fn significand(self) -> Self::Int {
-        self.repr() & ((1 << Self::significand_bits()) - 1)
+        self.repr() & Self::significand_mask()
     }
     fn normalize(significand: Self::Int) -> (i32, Self::Int) {
         let shift = significand.leading_zeros()
@@ -79,21 +104,34 @@ impl Float for f64 {
     fn significand_bits() -> u32 {
         52
     }
+    fn sign_mask() -> Self::Int {
+        1 << (Self::bits() - 1)
+    }
+    fn exponent_mask() -> Self::Int {
+        ((1 << Self::exponent_bits()) - 1) << Self::significand_bits()
+    }
+    fn significand_mask() -> Self::Int {
+        (1 << Self::significand_bits()) - 1
+    }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
     }
     fn from_repr(a: Self::Int) -> Self {
         unsafe { mem::transmute(a) }
     }
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+        Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
+            exponent & Self::exponent_mask() |
+            significand & Self::significand_mask())
+    }
     fn sign(self) -> bool {
-        (self.repr() & 1 << Self::bits()) != 0
+        (self.repr() & Self::sign_mask()) != 0
     }
     fn exponent(self) -> Self::Int {
-        self.repr() >> Self::significand_bits()
-            & ((1 << Self::exponent_bits()) - 1)
+        self.repr() >> Self::significand_bits() & Self::exponent_mask()
     }
     fn significand(self) -> Self::Int {
-        self.repr() & ((1 << Self::significand_bits()) - 1)
+        self.repr() & Self::significand_mask()
     }
     fn normalize(significand: Self::Int) -> (i32, Self::Int) {
         let shift = significand.leading_zeros()

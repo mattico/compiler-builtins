@@ -87,12 +87,12 @@ macro_rules! add {
             if a_exponent.0 == 0 {
                 let (exponent, significand) = <$ty>::normalize(a_significand.0);
                 a_exponent = Wrapping(exponent);
-                a_significand = Wrapping(significand); 
+                a_significand = Wrapping(significand);
             }
             if b_exponent.0 == 0 {
                 let (exponent, significand) = <$ty>::normalize(b_significand.0);
                 b_exponent = Wrapping(exponent);
-                b_significand = Wrapping(significand); 
+                b_significand = Wrapping(significand);
             }
 
             // The sign of the result is the sign of the larger operand, a.  If they
@@ -121,8 +121,8 @@ macro_rules! add {
             if subtraction {
                 a_significand -= b_significand;
                 // If a == -b, return +zero.
-                if a_significand.0 == 0 { 
-                    return (<$ty as Float>::from_repr(0)); 
+                if a_significand.0 == 0 {
+                    return (<$ty as Float>::from_repr(0));
                 }
 
                 // If partial cancellation occured, we need to left-shift the result
@@ -146,7 +146,7 @@ macro_rules! add {
             }
 
             // If we have overflowed the type, return +/- infinity:
-            if a_exponent >= Wrapping(max_exponent.0 as i32) { 
+            if a_exponent >= Wrapping(max_exponent.0 as i32) {
                 return (<$ty>::from_repr((inf_rep | result_sign).0));
             }
 
@@ -196,20 +196,18 @@ pub extern fn __aeabi_fadd(a: f32, b: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use core::{f32, f64};
-    use qc::{U32, U64};
     use float::Float;
+    use qc::{F32, F64};
 
     // NOTE The tests below have special handing for NaN values.
-    // Because NaN != NaN, the floating-point representations must be used
+    // Because NaN != NaN, the representations are compared
     // Because there are many diffferent values of NaN, and the implementation
     // doesn't care about calculating the 'correct' one, if both values are NaN
     // the values are considered equivalent.
 
-    // TODO: Add F32/F64 to qc so that they print the right values (at the very least)
     quickcheck! {
-        fn addsf3(a: U32, b: U32) -> bool {
-            let (a, b) = (f32::from_repr(a.0), f32::from_repr(b.0));
+        fn addsf3(a: F32, b: F32) -> bool {
+            let (a, b) = (a.0, b.0);
             let x = super::__addsf3(a, b);
             let y = a + b;
             if !(x.is_nan() && y.is_nan()) {
@@ -219,8 +217,8 @@ mod tests {
             }
         }
 
-        fn adddf3(a: U64, b: U64) -> bool {
-            let (a, b) = (f64::from_repr(a.0), f64::from_repr(b.0));
+        fn adddf3(a: F64, b: F64) -> bool {
+            let (a, b) = (a.0, b.0);
             let x = super::__adddf3(a, b);
             let y = a + b;
             if !(x.is_nan() && y.is_nan()) {
@@ -229,96 +227,5 @@ mod tests {
                 true
             }
         }
-    }
-    
-    // More tests for special float values
-
-    #[test]
-    fn test_float_tiny_plus_tiny() {
-        let tiny = f32::from_repr(1);
-        let r = super::__addsf3(tiny, tiny);
-        assert_eq!(r, tiny + tiny);
-    }
-
-    #[test]
-    fn test_double_tiny_plus_tiny() {
-        let tiny = f64::from_repr(1);
-        let r = super::__adddf3(tiny, tiny);
-        assert_eq!(r, tiny + tiny);
-    }
-
-    #[test]
-    fn test_float_small_plus_small() {
-        let a = f32::from_repr(327);
-        let b = f32::from_repr(256);
-        let r = super::__addsf3(a, b);
-        assert_eq!(r, a + b);
-    }
-
-    #[test]
-    fn test_double_small_plus_small() {
-        let a = f64::from_repr(327);
-        let b = f64::from_repr(256);
-        let r = super::__adddf3(a, b);
-        assert_eq!(r, a + b);
-    }
-
-    #[test]
-    fn test_float_one_plus_one() {
-        let r = super::__addsf3(1f32, 1f32);
-        assert_eq!(r, 1f32 + 1f32);
-    }
-
-    #[test]
-    fn test_double_one_plus_one() {
-        let r = super::__adddf3(1f64, 1f64);
-        assert_eq!(r, 1f64 + 1f64);
-    }
-
-    #[test]
-    fn test_float_different_nan() {
-        let a = f32::from_repr(1);
-        let b = f32::from_repr(0b11111111100100010001001010101010);
-        let x = super::__addsf3(a, b);
-        let y = a + b;
-        if !(x.is_nan() && y.is_nan()) {
-            assert_eq!(x.repr(), y.repr());
-        }
-    }
-
-    #[test]
-    fn test_double_different_nan() {
-        let a = f64::from_repr(1);
-        let b = f64::from_repr(
-            0b1111111111110010001000100101010101001000101010000110100011101011);
-        let x = super::__adddf3(a, b);
-        let y = a + b;
-        if !(x.is_nan() && y.is_nan()) {
-            assert_eq!(x.repr(), y.repr());
-        }
-    }
-
-    #[test]
-    fn test_float_nan() {
-        let r = super::__addsf3(f32::NAN, 1.23);
-        assert_eq!(r.repr(), f32::NAN.repr());
-    }
-
-    #[test]
-    fn test_double_nan() {
-        let r = super::__adddf3(f64::NAN, 1.23);
-        assert_eq!(r.repr(), f64::NAN.repr());
-    }
-
-    #[test]
-    fn test_float_inf() {
-        let r = super::__addsf3(f32::INFINITY, -123.4);
-        assert_eq!(r, f32::INFINITY);
-    }
-
-    #[test]
-    fn test_double_inf() {
-        let r = super::__adddf3(f64::INFINITY, -123.4);
-        assert_eq!(r, f64::INFINITY);
     }
 }
