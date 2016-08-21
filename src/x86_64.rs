@@ -1,5 +1,3 @@
-use core::intrinsics;
-
 // NOTE These functions are implemented using assembly because they using a custom
 // calling convention which can't be implemented using a normal Rust function
 

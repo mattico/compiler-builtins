@@ -1,7 +1,7 @@
 #![feature(asm)]
-#![feature(core_intrinsics)]
 #![feature(linkage)]
 #![feature(naked_functions)]
+#![cfg_attr(test, feature(test))]
 #![cfg_attr(not(test), no_std)]
 #![no_builtins]
 // TODO(rust-lang/rust#35021) uncomment when that PR lands
@@ -16,6 +16,9 @@ extern crate quickcheck;
 
 #[cfg(test)]
 extern crate core;
+
+#[cfg(test)]
+extern crate test;
 
 #[cfg(all(not(windows), not(target_os = "macos")))]
 extern crate rlibc;

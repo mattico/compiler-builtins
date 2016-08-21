@@ -196,6 +196,7 @@ pub extern fn __aeabi_fadd(a: f32, b: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
+    use test::{black_box, Bencher};
     use float::Float;
     use qc::{F32, F64};
 
@@ -227,5 +228,37 @@ mod tests {
                 true
             }
         }
+    }
+
+    #[bench]
+    fn bench_native_float_add(b: &mut Bencher) {
+        b.iter(|| {
+            let n = black_box(1000);
+            (0..n).fold(0.0, |a, b| a + b as f32)
+        });
+    }
+
+    #[bench]
+    fn bench_builtin_float_add(b: &mut Bencher) {
+        b.iter(|| {
+            let n = black_box(1000);
+            (0..n).fold(0.0, |a, b| super::__addsf3(a, b as f32))
+        });
+    }
+
+    #[bench]
+    fn bench_native_double_add(b: &mut Bencher) {
+        b.iter(|| {
+            let n = black_box(1000);
+            (0..n).fold(0.0, |a, b| a + b as f64)
+        });
+    }
+
+    #[bench]
+    fn bench_builtin_double_add(b: &mut Bencher) {
+        b.iter(|| {
+            let n = black_box(1000);
+            (0..n).fold(0.0, |a, b| super::__adddf3(a, b as f64))
+        });
     }
 }
