@@ -1,7 +1,13 @@
 dist: trusty
-language: generic
+language: rust
 services: docker
 sudo: required
+
+cache:
+  cargo: true
+  directories:
+    - $HOME/.multirust
+    - $HOME/.xargo
 
 matrix:
   include:
