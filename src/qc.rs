@@ -134,26 +134,25 @@ macro_rules! arbitrary_float {
                 where G: Gen
             {
                 let special = [
-                    -0.0, 0.0, 1.0, $ty::NAN, $ty::INFINITY, -$ty::INFINITY
+                    -0.0, 0.0, $ty::NAN, $ty::INFINITY, -$ty::INFINITY
                 ];
 
-                if g.gen() { // Random special case
-                    let index: usize = g.gen();
-                    $TY(special[index % special.len()])
-                } else if g.gen() { // Random anything
+                if g.gen_weighted_bool(10) { // Random special case
+                    $TY(*g.choose(&special).unwrap())
+                } else if g.gen_weighted_bool(10) { // NaN variants
                     let sign: bool = g.gen();
                     let exponent: <$ty as Float>::Int = g.gen();
-                    let significand: <$ty as Float>::Int = g.gen();
+                    let significand: <$ty as Float>::Int = 0;
                     $TY($ty::from_parts(sign, exponent, significand))
                 } else if g.gen() { // Denormalized
                     let sign: bool = g.gen();
                     let exponent: <$ty as Float>::Int = 0;
                     let significand: <$ty as Float>::Int = g.gen();
                     $TY($ty::from_parts(sign, exponent, significand))
-                } else { // NaN variants
+                } else { // Random anything
                     let sign: bool = g.gen();
                     let exponent: <$ty as Float>::Int = g.gen();
-                    let significand: <$ty as Float>::Int = 0;
+                    let significand: <$ty as Float>::Int = g.gen();
                     $TY($ty::from_parts(sign, exponent, significand))
                 }
             }
