@@ -32,12 +32,15 @@ pub trait Float: Sized + Copy {
 
     #[cfg(test)]
     /// Checks if two floats have the same bit representation. *Except* for NaNs! NaN can be
-    /// represented in multiple different ways. This methods returns `true` if two NaNs are
+    /// represented in multiple different ways. This method returns `true` if two NaNs are
     /// compared.
     fn eq_repr(self, rhs: Self) -> bool;
 
     /// Returns a `Self::Int` transmuted back to `Self`
     fn from_repr(a: Self::Int) -> Self;
+
+    /// Constructs a `Self` from its parts. Inputs are treated as bits and shifted into position.
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self;
 
     /// Returns (normalized exponent, normalized significand)
     fn normalize(significand: Self::Int) -> (i32, Self::Int);
@@ -76,6 +79,11 @@ impl Float for f32 {
     fn from_repr(a: Self::Int) -> Self {
         unsafe { mem::transmute(a) }
     }
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+        Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
+            ((exponent << Self::significand_bits()) & Self::exponent_mask()) |
+            (significand & Self::significand_mask()))
+    }
     fn normalize(significand: Self::Int) -> (i32, Self::Int) {
         let shift = significand.leading_zeros()
             .wrapping_sub((1u32 << Self::significand_bits()).leading_zeros());
@@ -112,6 +120,11 @@ impl Float for f64 {
     }
     fn from_repr(a: Self::Int) -> Self {
         unsafe { mem::transmute(a) }
+    }
+    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+        Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
+            ((exponent << Self::significand_bits()) & Self::exponent_mask()) |
+            (significand & Self::significand_mask()))
     }
     fn normalize(significand: Self::Int) -> (i32, Self::Int) {
         let shift = significand.leading_zeros()

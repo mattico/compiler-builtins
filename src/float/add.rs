@@ -189,47 +189,20 @@ mod tests {
     use core::fmt;
 
     use float::Float;
-    use qc::{U32, U64};
+    use qc::{F32, F64};
 
-    // TODO: Move this to F32/F64 in qc.rs
-    #[derive(Copy, Clone)]
-    struct FRepr<F>(F);
-
-    impl<F: Float> PartialEq for FRepr<F> {
-        fn eq(&self, other: &FRepr<F>) -> bool {
-            // NOTE(cfg) for some reason, on hard float targets, our implementation doesn't
-            // match the output of its gcc_s counterpart. Until we investigate further, we'll
-            // just avoid testing against gcc_s on those targets. Do note that our
-            // implementation matches the output of the FPU instruction on *hard* float targets
-            // and matches its gcc_s counterpart on *soft* float targets.
-            if cfg!(gnueabihf) {
-                return true
-            }
-            self.0.eq_repr(other.0)
-        }
-    }
-
-    impl<F: fmt::Debug> fmt::Debug for FRepr<F> {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
-    // TODO: Add F32/F64 to qc so that they print the right values (at the very least)
     check! {
         fn __addsf3(f: extern fn(f32, f32) -> f32,
-                    a: U32,
-                    b: U32)
-                    -> Option<FRepr<f32> > {
-            let (a, b) = (f32::from_repr(a.0), f32::from_repr(b.0));
-            Some(FRepr(f(a, b)))
+                    a: F32,
+                    b: F32)
+                    -> Option<F32> {
+            Some(FRepr(f(a.0, b.0)))
         }
 
         fn __adddf3(f: extern fn(f64, f64) -> f64,
                     a: U64,
-                    b: U64) -> Option<FRepr<f64> > {
-            let (a, b) = (f64::from_repr(a.0), f64::from_repr(b.0));
-            Some(FRepr(f(a, b)))
+                    b: U64) -> Option<F64> {
+            Some(FRepr(f(a.0, b.0)))
         }
     }
 
