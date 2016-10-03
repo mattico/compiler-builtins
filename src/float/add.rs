@@ -307,4 +307,12 @@ mod tests {
         let r = super::__adddf3(a, b);
         assert_eq!(r, a + b);
     }
+
+    #[test]
+    fn test_float_arm_fail_2() {
+        let a = -0.00000000000000000000000000000000000000359621;
+        let b = 0.000000000000000000000000000000000000011540496;
+        let r = super::__addsf3(a, b);
+        assert_eq!(r, a + b);
+    }
 }
