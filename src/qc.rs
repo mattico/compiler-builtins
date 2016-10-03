@@ -241,7 +241,8 @@ macro_rules! check {
                         }
                     }
 
-                    ::quickcheck::quickcheck(my_check as fn($($t),*) -> TestResult)
+                    ::quickcheck::QuickCheck::new().tests(1000)
+                        .quickcheck(my_check as fn($($t),*) -> TestResult)
                 }
             )*
         }
