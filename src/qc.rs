@@ -220,13 +220,15 @@ macro_rules! check {
                             None => None,
                         };
 
+                        let sci_or_none = |a| a.unwrap_or_else(|v| format!("{:E}", v), "None");
+
                         let print_values = || {
                             print!("{} - Args: ", stringify!($name));
-                            $(print!("{:?} ", $arg);)*
+                            $(print!("{:E} ", $arg);)*
                             print!("\n");
-                            println!("  rustc-builtins: {:?}", my_answer);
-                            println!("  compiler_rt:    {:?}", compiler_rt_answer);
-                            println!("  gcc_s:          {:?}", gcc_s_answer);
+                            println!("  rustc-builtins: {}", sci_or_none(my_answer));
+                            println!("  compiler_rt:    {}", sci_or_none(compiler_rt_answer));
+                            println!("  gcc_s:          {}", sci_or_none(gcc_s_answer));
                         };
 
                         if my_answer != compiler_rt_answer {
