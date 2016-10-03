@@ -5,10 +5,12 @@
 
 use std::boxed::Box;
 use std::fmt;
+use core::{f32, f64};
 
 use quickcheck::{Arbitrary, Gen};
 
 use int::LargeInt;
+use float::Float;
 
 // Generates values in the full range of the integer type
 macro_rules! arbitrary {
