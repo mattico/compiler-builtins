@@ -13,6 +13,20 @@ pub trait Float: Sized + Copy {
     /// Returns the bitwidth of the significand
     fn significand_bits() -> u32;
 
+    /// Returns the bitwidth of the exponent
+    fn exponent_bits() -> u32 {
+        Self::bits() - Self::significand_bits() - 1
+    }
+
+    /// Returns a mask for the sign bit
+    fn sign_mask() -> Self::Int;
+
+    /// Returns a mask for the significand
+    fn significand_mask() -> Self::Int;
+
+    /// Returns a mask for the exponent
+    fn exponent_mask() -> Self::Int;
+
     /// Returns `self` transmuted to `Self::Int`
     fn repr(self) -> Self::Int;
 
@@ -29,6 +43,8 @@ pub trait Float: Sized + Copy {
     fn normalize(significand: Self::Int) -> (i32, Self::Int);
 }
 
+// FIXME: Some of this can be removed if RFC Issue #1424 is resolved
+//        https://github.com/rust-lang/rfcs/issues/1424
 impl Float for f32 {
     type Int = u32;
     fn bits() -> u32 {
@@ -36,6 +52,15 @@ impl Float for f32 {
     }
     fn significand_bits() -> u32 {
         23
+    }
+    fn sign_mask() -> Self::Int {
+        1 << (Self::bits() - 1)
+    }
+    fn significand_mask() -> Self::Int {
+        (1 << Self::significand_bits()) - 1
+    }
+    fn exponent_mask() -> Self::Int {
+        !(Self::sign_mask() | Self::significand_mask())
     }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
@@ -64,6 +89,15 @@ impl Float for f64 {
     }
     fn significand_bits() -> u32 {
         52
+    }
+    fn sign_mask() -> Self::Int {
+        1 << (Self::bits() - 1)
+    }
+    fn significand_mask() -> Self::Int {
+        (1 << Self::significand_bits()) - 1
+    }
+    fn exponent_mask() -> Self::Int {
+        !(Self::sign_mask() | Self::significand_mask())
     }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
