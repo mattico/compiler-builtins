@@ -13,6 +13,7 @@ case $1 in
         cargo test --target $1 --no-run --release
         ;;
     *)
+        cargo build --release
         cargo test --target $1
         cargo test --target $1 --release
         ;;
