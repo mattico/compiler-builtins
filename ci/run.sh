@@ -1,5 +1,3 @@
-set -e
-
 # Test our implementation
 case $1 in
     thumb*)
@@ -71,7 +69,6 @@ esac
 # NOTE On i586, It's normal that the get_pc_thunk symbol appears several times so ignore it
 stdout=$($PREFIX$NM -g --defined-only /target/${1}/debug/librustc_builtins.rlib)
 
-set +e
 echo $stdout | sort | uniq -d | grep -v __x86.get_pc_thunk | grep 'T __'
 
 if test $? = 0; then
