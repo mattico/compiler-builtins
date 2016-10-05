@@ -44,6 +44,18 @@ case $1 in
         ;;
 esac
 
+if test "$1" = "arm-unknown-linux-gnueabi"; then
+    OBJDUMP=objdump
+    echo '#################################################'
+    echo 'rustc-builtins'
+    echo '#################################################'
+    $PREFIX$OBJDUMP -D target/release/librustc_builtins.rlib
+    echo '#################################################'
+    echo 'compiler-rt'
+    echo '#################################################'
+    $PREFIX$OBJDUMP -D target/release/deps/libcompiler_rt.rlib
+fi
+
 case $TRAVIS_OS_NAME in
     osx)
         # NOTE OSx's nm doesn't accept the `--defined-only` or provide an equivalent.
