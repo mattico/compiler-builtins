@@ -27,6 +27,9 @@ fn main() {
     let target = env::var("TARGET").expect("TARGET was not set");
     let cfg = &mut gcc::Config::new();
 
+    cfg.flag("-frounding-math");
+    cfg.flag("-fsignaling-nans");
+
     if target.contains("msvc") {
         cfg.define("__func__", Some("__FUNCTION__"));
     } else {
