@@ -181,10 +181,14 @@ macro_rules! add {
     }
 }
 
+// NOTE(cfg) These are disabled for gnueabihf due to 
+// https://github.com/rust-lang-nursery/compiler-builtins/issues/90
+#[cfg(not(gnueabi))]
 add!(__addsf3: f32);
+#[cfg(not(gnueabi))]
 add!(__adddf3: f64);
 
-#[cfg(test)]
+#[cfg(all(test, not(gnueabi)))]
 mod tests {
     use core::{f32, f64};
     use qc::{F32, F64};
@@ -194,21 +198,13 @@ mod tests {
                     a: F32,
                     b: F32)
                     -> Option<F32> {
-            if option_env!("TARGET") != Some("arm-unknown-linux-gnueabi") {
-                Some(F32(f(a.0, b.0)))
-            } else {
-                None
-            }
+            Some(F32(f(a.0, b.0)))
         }
 
         fn __adddf3(f: extern fn(f64, f64) -> f64,
                     a: F64,
                     b: F64) -> Option<F64> {
-            if option_env!("TARGET") != Some("arm-unknown-linux-gnueabi") {
-                Some(F64(f(a.0, b.0)))
-            } else {
-                None
-            }
+            Some(F64(f(a.0, b.0)))
         }
     }
 }
