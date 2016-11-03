@@ -58,11 +58,13 @@ pub unsafe fn __aeabi_ldivmod() {
 }
 
 // TODO: These aeabi_* functions should be defined as aliases
+#[cfg(not(gnueabi))]
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn __aeabi_dadd(a: f64, b: f64) -> f64 {
     ::float::add::__adddf3(a, b)
 }
 
+#[cfg(not(gnueabi))]
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn __aeabi_fadd(a: f32, b: f32) -> f32 {
     ::float::add::__addsf3(a, b)

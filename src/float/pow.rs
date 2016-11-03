@@ -31,7 +31,6 @@ pow!(__powidf2: f64, i32);
 
 #[cfg(test)]
 mod tests {
-    use float::{Float};
     use qc::{I32, F32, F64};
 
     check! {

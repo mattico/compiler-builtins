@@ -1,7 +1,9 @@
 use core::mem;
-#[cfg(test)]
-use core::fmt;
 
+// NOTE(cfg) add is disabled for gnueabi due to 
+// https://github.com/rust-lang-nursery/compiler-builtins/issues/90
+
+#[cfg(not(gnueabi))]
 pub mod add;
 pub mod pow;
 

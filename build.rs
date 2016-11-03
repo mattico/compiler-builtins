@@ -360,6 +360,10 @@ fn main() {
 
         }
 
+        if llvm_target.last().unwrap().ends_with("gnueabi") {
+            sources.extend(&["addsf3.c", "adddf3.c"]);
+        }
+
         if target_arch == "aarch64" {
             sources.extend(&["comparetf2.c",
                              "extenddftf2.c",

@@ -181,14 +181,10 @@ macro_rules! add {
     }
 }
 
-// NOTE(cfg) These are disabled for gnueabihf due to 
-// https://github.com/rust-lang-nursery/compiler-builtins/issues/90
-#[cfg(not(gnueabi))]
 add!(__addsf3: f32);
-#[cfg(not(gnueabi))]
 add!(__adddf3: f64);
 
-#[cfg(all(test, not(gnueabi)))]
+#[cfg(test)]
 mod tests {
     use core::{f32, f64};
     use qc::{F32, F64};
