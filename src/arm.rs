@@ -58,6 +58,10 @@ pub unsafe fn __aeabi_ldivmod() {
 }
 
 // TODO: These aeabi_* functions should be defined as aliases
+
+// NOTE(cfg) The gnueabi targets use the C implementation for now
+// https://github.com/rust-lang-nursery/compiler-builtins/issues/90
+
 #[cfg(not(gnueabi))]
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn __aeabi_dadd(a: f64, b: f64) -> f64 {
