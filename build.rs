@@ -140,7 +140,6 @@ fn main() {
                          "floatdisf.c",
                          "floatdixf.c",
                          "floatsidf.c",
-                         "floatsisf.c",
                          "floatundidf.c",
                          "floatundisf.c",
                          "floatundixf.c",
