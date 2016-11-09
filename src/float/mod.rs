@@ -5,6 +5,7 @@ use core::mem;
 
 #[cfg(not(gnueabi))]
 pub mod add;
+pub mod convert;
 pub mod pow;
 
 /// Trait for some basic operations on floats
@@ -23,6 +24,12 @@ pub trait Float: Sized + Copy {
         Self::bits() - Self::significand_bits() - 1
     }
 
+    /// Returns the maximum exponent value
+    fn max_exponent() -> Self::Int;
+
+    /// Returns the exponent bias
+    fn exponent_bias() -> Self::Int;
+
     /// Returns a mask for the sign bit
     fn sign_mask() -> Self::Int;
 
@@ -31,6 +38,9 @@ pub trait Float: Sized + Copy {
 
     /// Returns a mask for the exponent
     fn exponent_mask() -> Self::Int;
+
+    /// Returns a mask for the implicit bit (the last bit of the exponent)
+    fn implicit_bit() -> Self::Int; 
 
     /// Returns `self` transmuted to `Self::Int`
     fn repr(self) -> Self::Int;
@@ -69,6 +79,15 @@ impl Float for f32 {
     }
     fn exponent_mask() -> Self::Int {
         !(Self::sign_mask() | Self::significand_mask())
+    }
+    fn max_exponent() -> Self::Int {
+        (1 << Self::exponent_bits()) - 1
+    }
+    fn exponent_bias() -> Self::Int {
+        Self::max_exponent() >> 1
+    }
+    fn implicit_bit() -> Self::Int {
+        1 << Self::significand_bits()
     }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
@@ -111,6 +130,15 @@ impl Float for f64 {
     }
     fn exponent_mask() -> Self::Int {
         !(Self::sign_mask() | Self::significand_mask())
+    }
+    fn max_exponent() -> Self::Int {
+        (1 << Self::exponent_bits()) - 1
+    }
+    fn exponent_bias() -> Self::Int {
+        Self::max_exponent() >> 1
+    }
+    fn implicit_bit() -> Self::Int {
+        1 << Self::significand_bits()
     }
     fn repr(self) -> Self::Int {
         unsafe { mem::transmute(self) }
