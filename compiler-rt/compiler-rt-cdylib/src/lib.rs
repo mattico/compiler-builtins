@@ -1,7 +1,7 @@
 #![feature(lang_items)]
 #![no_std]
 
-extern {
+extern "aapcs" {
     fn __ashldi3();
     fn __ashrdi3();
     fn __divdi3();
@@ -29,7 +29,7 @@ extern {
 macro_rules! declare {
     ($func:ident, $sym:ident) => {
         #[no_mangle]
-        pub extern fn $func() -> usize {
+        pub extern "aapcs" fn $func() -> usize {
             $sym as usize
         }
     }

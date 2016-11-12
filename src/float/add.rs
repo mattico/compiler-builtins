@@ -8,7 +8,7 @@ macro_rules! add {
         /// Returns `a + b`
         #[allow(unused_parens)]
         #[cfg_attr(not(test), no_mangle)]
-        pub extern fn $intrinsic(a: $ty, b: $ty) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: $ty) -> $ty {
             let one = Wrapping(1 as <$ty as Float>::Int);
             let zero = Wrapping(0 as <$ty as Float>::Int);
 
@@ -188,20 +188,20 @@ add!(__adddf3: f64);
 // match the output of its gcc_s or compiler-rt counterpart. Until we investigate further, we'll
 // just avoid testing against them on those targets. Do note that our implementation gives the
 // correct answer; gcc_s and compiler-rt are incorrect in this case.
-#[cfg(all(test, not(arm-linux)))]
+#[cfg(test)]
 mod tests {
     use core::{f32, f64};
     use qc::{F32, F64};
 
     check! {
-        fn __addsf3(f: extern fn(f32, f32) -> f32,
+        fn __addsf3(f: extern "aapcs" fn(f32, f32) -> f32,
                     a: F32,
                     b: F32)
                     -> Option<F32> {
             Some(F32(f(a.0, b.0)))
         }
 
-        fn __adddf3(f: extern fn(f64, f64) -> f64,
+        fn __adddf3(f: extern "aapcs" fn(f64, f64) -> f64,
                     a: F64,
                     b: F64) -> Option<F64> {
             Some(F64(f(a.0, b.0)))

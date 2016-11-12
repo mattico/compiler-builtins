@@ -6,7 +6,7 @@ macro_rules! mul {
     ($intrinsic:ident: $ty:ty) => {
         /// Returns `a * b`
         #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty, b: $ty) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: $ty) -> $ty {
             let half_bits = <$ty>::bits() / 4;
             let lower_mask = !0 >> half_bits;
             let mut low = (a.low() & lower_mask) * (b.low() & lower_mask);
@@ -31,7 +31,7 @@ macro_rules! mulo {
     ($intrinsic:ident: $ty:ty) => {
         /// Returns `a * b` and sets `*overflow = 1` if `a * b` overflows
         #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty, b: $ty, overflow: &mut i32) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: $ty, overflow: &mut i32) -> $ty {
             *overflow = 0;
             let result = a.wrapping_mul(b);
             if a == <$ty>::min_value() {
@@ -79,12 +79,12 @@ mod tests {
     use qc::{I32, I64, U64};
 
     check! {
-        fn __muldi3(f: extern fn(u64, u64) -> u64, a: U64, b: U64)
+        fn __muldi3(f: extern "aapcs" fn(u64, u64) -> u64, a: U64, b: U64)
                     -> Option<u64> {
             Some(f(a.0, b.0))
         }
 
-        fn __mulosi4(f: extern fn(i32, i32, &mut i32) -> i32,
+        fn __mulosi4(f: extern "aapcs" fn(i32, i32, &mut i32) -> i32,
                      a: I32,
                      b: I32) -> Option<(i32, i32)> {
             let (a, b) = (a.0, b.0);
@@ -96,7 +96,7 @@ mod tests {
             Some((r, overflow))
         }
 
-        fn __mulodi4(f: extern fn(i64, i64, &mut i32) -> i64,
+        fn __mulodi4(f: extern "aapcs" fn(i64, i64, &mut i32) -> i64,
                      a: I64,
                      b: I64) -> Option<(i64, i32)> {
             let (a, b) = (a.0, b.0);

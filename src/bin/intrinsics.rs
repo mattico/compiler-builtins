@@ -400,8 +400,8 @@ pub fn _Unwind_Resume() {}
 // Lang items
 #[cfg(not(test))]
 #[lang = "eh_personality"]
-extern "C" fn eh_personality() {}
+extern "aapcs" fn eh_personality() {}
 
 #[cfg(not(test))]
 #[lang = "panic_fmt"]
-extern "C" fn panic_fmt() {}
+extern "aapcs" fn panic_fmt() {}

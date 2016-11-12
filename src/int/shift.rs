@@ -5,7 +5,7 @@ macro_rules! ashl {
     ($intrinsic:ident: $ty:ty) => {
         /// Returns `a << b`, requires `b < $ty::bits()`
         #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty, b: u32) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: u32) -> $ty {
             let half_bits = <$ty>::bits() / 2;
             if b & half_bits != 0 {
                 <$ty>::from_parts(0, a.low() << (b - half_bits))
@@ -22,7 +22,7 @@ macro_rules! ashr {
     ($intrinsic:ident: $ty:ty) => {
         /// Returns arithmetic `a >> b`, requires `b < $ty::bits()`
         #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty, b: u32) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: u32) -> $ty {
             let half_bits = <$ty>::bits() / 2;
             if b & half_bits != 0 {
                 <$ty>::from_parts((a.high() >> (b - half_bits)) as <$ty as LargeInt>::LowHalf,
@@ -42,7 +42,7 @@ macro_rules! lshr {
     ($intrinsic:ident: $ty:ty) => {
         /// Returns logical `a >> b`, requires `b < $ty::bits()`
         #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty, b: u32) -> $ty {
+        pub extern "aapcs" fn $intrinsic(a: $ty, b: u32) -> $ty {
             let half_bits = <$ty>::bits() / 2;
             if b & half_bits != 0 {
                 <$ty>::from_parts(a.high() >> (b - half_bits), 0)
@@ -70,7 +70,7 @@ mod tests {
 
     // NOTE We purposefully stick to `u32` for `b` here because we want "small" values (b < 64)
     check! {
-        fn __ashldi3(f: extern fn(u64, u32) -> u64, a: U64, b: u32) -> Option<u64> {
+        fn __ashldi3(f: extern "aapcs" fn(u64, u32) -> u64, a: U64, b: u32) -> Option<u64> {
             let a = a.0;
             if b >= 64 {
                 None
@@ -79,7 +79,7 @@ mod tests {
             }
         }
 
-        fn __ashrdi3(f: extern fn(i64, u32) -> i64, a: I64, b: u32) -> Option<i64> {
+        fn __ashrdi3(f: extern "aapcs" fn(i64, u32) -> i64, a: I64, b: u32) -> Option<i64> {
             let a = a.0;
             if b >= 64 {
                 None
@@ -88,7 +88,7 @@ mod tests {
             }
         }
 
-        fn __lshrdi3(f: extern fn(u64, u32) -> u64, a: U64, b: u32) -> Option<u64> {
+        fn __lshrdi3(f: extern "aapcs" fn(u64, u32) -> u64, a: U64, b: u32) -> Option<u64> {
             let a = a.0;
             if b >= 64 {
                 None

@@ -4,7 +4,7 @@ use int::{Int, LargeInt};
 /// Returns `n / d`
 #[cfg(not(all(feature = "c", target_arch = "arm", not(target_os = "ios"), not(thumbv6m))))]
 #[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn __udivsi3(n: u32, d: u32) -> u32 {
+pub extern "aapcs" fn __udivsi3(n: u32, d: u32) -> u32 {
     // Special cases
     if d == 0 {
         // NOTE This should be unreachable in safe Rust because the program will panic before
@@ -59,9 +59,9 @@ pub extern "C" fn __udivsi3(n: u32, d: u32) -> u32 {
 /// Returns `n % d`
 #[cfg(not(all(feature = "c", target_arch = "arm", not(target_os = "ios"))))]
 #[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn __umodsi3(n: u32, d: u32) -> u32 {
+pub extern "aapcs" fn __umodsi3(n: u32, d: u32) -> u32 {
     #[cfg(all(feature = "c", target_arch = "arm", not(target_os = "ios")))]
-    extern "C" {
+    extern "aapcs" {
         fn __udivsi3(n: u32, d: u32) -> u32;
     }
 
@@ -78,9 +78,9 @@ pub extern "C" fn __umodsi3(n: u32, d: u32) -> u32 {
 /// Returns `n / d` and sets `*rem = n % d`
 #[cfg(not(all(feature = "c", target_arch = "arm", not(target_os = "ios"), not(thumbv6m))))]
 #[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn __udivmodsi4(n: u32, d: u32, rem: Option<&mut u32>) -> u32 {
+pub extern "aapcs" fn __udivmodsi4(n: u32, d: u32, rem: Option<&mut u32>) -> u32 {
     #[cfg(all(feature = "c", target_arch = "arm", not(target_os = "ios")))]
-    extern "C" {
+    extern "aapcs" {
         fn __udivsi3(n: u32, d: u32) -> u32;
     }
 
@@ -99,14 +99,14 @@ pub extern "C" fn __udivmodsi4(n: u32, d: u32, rem: Option<&mut u32>) -> u32 {
 /// Returns `n / d`
 #[cfg_attr(not(test), no_mangle)]
 #[cfg(not(all(feature = "c", target_arch = "x86")))]
-pub extern "C" fn __udivdi3(n: u64, d: u64) -> u64 {
+pub extern "aapcs" fn __udivdi3(n: u64, d: u64) -> u64 {
     __udivmoddi4(n, d, None)
 }
 
 /// Returns `n % d`
 #[cfg(not(all(feature = "c", target_arch = "x86")))]
 #[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn __umoddi3(a: u64, b: u64) -> u64 {
+pub extern "aapcs" fn __umoddi3(a: u64, b: u64) -> u64 {
     use core::mem;
 
     let mut rem = unsafe { mem::uninitialized() };
@@ -116,7 +116,7 @@ pub extern "C" fn __umoddi3(a: u64, b: u64) -> u64 {
 
 /// Returns `n / d` and sets `*rem = n % d`
 #[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn __udivmoddi4(n: u64, d: u64, rem: Option<&mut u64>) -> u64 {
+pub extern "aapcs" fn __udivmoddi4(n: u64, d: u64, rem: Option<&mut u64>) -> u64 {
     // NOTE X is unknown, K != 0
     if n.high() == 0 {
         if d.high() == 0 {
@@ -267,7 +267,7 @@ mod tests {
     use qc::{U32, U64};
 
     check! {
-        fn __udivdi3(f: extern fn(u64, u64) -> u64, n: U64, d: U64) -> Option<u64> {
+        fn __udivdi3(f: extern "aapcs" fn(u64, u64) -> u64, n: U64, d: U64) -> Option<u64> {
             let (n, d) = (n.0, d.0);
             if d == 0 {
                 None
@@ -276,7 +276,7 @@ mod tests {
             }
         }
 
-        fn __umoddi3(f: extern fn(u64, u64) -> u64, n: U64, d: U64) -> Option<u64> {
+        fn __umoddi3(f: extern "aapcs" fn(u64, u64) -> u64, n: U64, d: U64) -> Option<u64> {
             let (n, d) = (n.0, d.0);
             if d == 0 {
                 None
@@ -285,7 +285,7 @@ mod tests {
             }
         }
 
-        fn __udivmoddi4(f: extern fn(u64, u64, Option<&mut u64>) -> u64,
+        fn __udivmoddi4(f: extern "aapcs" fn(u64, u64, Option<&mut u64>) -> u64,
                         n: U64,
                         d: U64) -> Option<(u64, u64)> {
             let (n, d) = (n.0, d.0);
@@ -298,7 +298,7 @@ mod tests {
             }
         }
 
-        fn __udivsi3(f: extern fn(u32, u32) -> u32, n: U32, d: U32) -> Option<u32> {
+        fn __udivsi3(f: extern "aapcs" fn(u32, u32) -> u32, n: U32, d: U32) -> Option<u32> {
             let (n, d) = (n.0, d.0);
             if d == 0 {
                 None
@@ -307,7 +307,7 @@ mod tests {
             }
         }
 
-        fn __umodsi3(f: extern fn(u32, u32) -> u32, n: U32, d: U32) -> Option<u32> {
+        fn __umodsi3(f: extern "aapcs" fn(u32, u32) -> u32, n: U32, d: U32) -> Option<u32> {
             let (n, d) = (n.0, d.0);
             if d == 0 {
                 None
@@ -316,7 +316,7 @@ mod tests {
             }
         }
 
-        fn __udivmodsi4(f: extern fn(u32, u32, Option<&mut u32>) -> u32,
+        fn __udivmodsi4(f: extern "aapcs" fn(u32, u32, Option<&mut u32>) -> u32,
                         n: U32,
                         d: U32) -> Option<(u32, u32)> {
             let (n, d) = (n.0, d.0);
