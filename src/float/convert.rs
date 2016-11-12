@@ -2,8 +2,6 @@ use core::mem;
 
 use float::Float;
 
-//ARM_EABI_FNALIAS(i2f, floatsisf)
-
 /// Implements signed integer to float conversion
 /// using the IEEE-754 default round-to-nearest, ties-to-even mode.
 #[cfg_attr(not(test), no_mangle)]

@@ -106,6 +106,11 @@ pub extern "C" fn __aeabi_uidiv(a: u32, b: u32) -> u32 {
     ::int::udiv::__udivsi3(a, b)
 }
 
+#[cfg_attr(not(test), no_mangle)]
+pub extern "C" fn __aeabi_i2f(a: u32) -> f64 {
+    ::float::convert::__floatsisf(a)
+}
+
 extern "C" {
     fn memcpy(dest: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memmove(dest: *mut u8, src: *const u8, n: usize) -> *mut u8;
