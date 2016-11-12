@@ -8,7 +8,9 @@ use float::Float;
 /// using the IEEE-754 default round-to-nearest, ties-to-even mode.
 macro_rules! int_to_float {
     ($intrinsic:ident: $ty:ty => $fty:ty) => {
-        pub extern fn $intrinsic(a: $ty) -> $fty {
+        /// Returns `a` converted to a float, using the default round mode.
+        #[cfg_attr(not(test), no_mangle)]
+        pub extern "C" fn $intrinsic(a: $ty) -> $fty {
     
             // Handle zero as a special case to protect clz
             // if (a == 0)
@@ -17,17 +19,8 @@ macro_rules! int_to_float {
                 return <$fty>::from_repr(0);
             }
 
-            // Exponent of (fp_t)a is the width of abs(a).
-            // const int exponent = (aWidth - 1) - __builtin_clz(a);
-            // rep_t result;
-            let type_width = mem::size_of::<$ty>() as <$fty as Float>::Int;
-            let exponent = (type_width - 1).wrapping_sub(a.leading_zeros()) as <$fty as Float>::Int;
-            let significand_bits = <$fty>::significand_bits();
             let sign_bit = <$fty>::sign_mask();
-            let implicit_bit = <$fty>::implicit_bit();
-            let exponent_bias = <$fty>::exponent_bias();
-            let mut result: <$fty as Float>::Int;
-    
+
             // All other cases begin by extracting the sign and absolute value of a
             // rep_t sign = 0;
             // if (a < 0) {
@@ -35,10 +28,20 @@ macro_rules! int_to_float {
             //     a = -a;
             // }
             let (sign, a_rep) = if a < 0 {
-                (sign_bit, -a as <$fty as Float>::Int)
+                (sign_bit, (-a) as <$fty as Float>::Int)
             } else {
                 (0, a as <$fty as Float>::Int)
             };
+
+            // Exponent of (fp_t)a is the width of abs(a).
+            // const int exponent = (aWidth - 1) - __builtin_clz(a);
+            // rep_t result;
+            let type_width = mem::size_of::<$ty>() as <$fty as Float>::Int * 8;
+            let exponent = (type_width - 1).wrapping_sub(a_rep.leading_zeros()) as <$fty as Float>::Int;
+            let significand_bits = <$fty>::significand_bits();
+            let implicit_bit = <$fty>::implicit_bit();
+            let exponent_bias = <$fty>::exponent_bias();
+            let mut result: <$fty as Float>::Int;
     
             // Shift a into the significand field, rounding if it is a right-shift
             // if (exponent <= significandBits) {
