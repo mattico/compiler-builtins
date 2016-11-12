@@ -4,79 +4,51 @@ use float::Float;
 
 //ARM_EABI_FNALIAS(i2f, floatsisf)
 
-/// Macro for implementing signed integer to float conversion
+/// Implements signed integer to float conversion
 /// using the IEEE-754 default round-to-nearest, ties-to-even mode.
-macro_rules! int_to_float {
-    ($intrinsic:ident: $ty:ty => $fty:ty) => {
-        /// Returns `a` converted to a float, using the default round mode.
-        #[cfg_attr(not(test), no_mangle)]
-        pub extern "C" fn $intrinsic(a: $ty) -> $fty {
-            // Handle zero as a special case to protect clz
-            // if (a == 0)
-            //     return fromRep(0);
-            if a == 0 {
-                return <$fty>::from_repr(0);
-            }
-
-            let sign_bit = <$fty>::sign_mask();
-
-            // All other cases begin by extracting the sign and absolute value of a
-            // rep_t sign = 0;
-            // if (a < 0) {
-            //     sign = signBit;
-            //     a = -a;
-            // }
-            let mut sign: <$fty as Float>::Int = 0;
-            let mut a = a;
-            if a < 0 {
-                sign = sign_bit;
-                a = -a;
-            };
-
-            // Exponent of (fp_t)a is the width of abs(a).
-            // const int exponent = (aWidth - 1) - __builtin_clz(a);
-            // rep_t result;
-            let type_width = mem::size_of::<$ty>() as <$fty as Float>::Int * 8;
-            let exponent = (type_width - 1).wrapping_sub(a.leading_zeros()) as <$fty as Float>::Int;
-            let significand_bits = <$fty>::significand_bits();
-            let implicit_bit = <$fty>::implicit_bit();
-            let exponent_bias = <$fty>::exponent_bias();
-            let mut result: <$fty as Float>::Int;
-
-            // Shift a into the significand field, rounding if it is a right-shift
-            // if (exponent <= significandBits) {
-            //     const int shift = significandBits - exponent;
-            //     result = (rep_t)a << shift ^ implicitBit;
-            // } else {
-            //     const int shift = exponent - significandBits;
-            //     result = (rep_t)a >> shift ^ implicitBit;
-            //     rep_t round = (rep_t)a << (typeWidth - shift);
-            //     if (round > signBit) result++;
-            //     if (round == signBit) result += result & 1;
-            // }
-            if exponent <= significand_bits {
-                let shift = significand_bits - exponent;
-                result = (a as <$fty as Float>::Int) << shift ^ implicit_bit;
-            } else {
-                let shift = exponent - significand_bits;
-                result = (a as <$fty as Float>::Int) >> shift ^ implicit_bit;
-                let round = (a as <$fty as Float>::Int).wrapping_shl(type_width.wrapping_sub(shift));
-                if round > sign_bit { result += 1; }
-                if round == sign_bit { result += result & 1; }
-            }
-
-            // Insert the exponent
-            // result += (rep_t)(exponent + exponentBias) << significandBits;
-            // Insert the sign bit and return
-            // return fromRep(result | sign);
-            result = result.wrapping_add(((exponent + exponent_bias) as <$fty as Float>::Int) << significand_bits);
-            
-            <$fty>::from_repr(result | sign)
-        }
+#[cfg_attr(not(test), no_mangle)]
+pub extern "C" fn __floatsisf(a: i32) -> f32 {
+    // Handle zero as a special case to protect clz
+    if a == 0 {
+        return <f32>::from_repr(0);
     }
-}
 
-int_to_float!(__floatsisf: i32 => f32);
+    let sign_bit = <f32>::sign_mask();
+
+    // All other cases begin by extracting the sign and absolute value of a
+    let mut a = a;
+    let mut sign: <f32 as Float>::Int = 0;
+    if a < 0 {
+        sign = sign_bit;
+        a = a.wrapping_neg();
+    };
+
+    // Exponent of (f32)a is the width of abs(a).
+    let type_width = mem::size_of::<i32>() as <f32 as Float>::Int * 8;
+    let exponent = (type_width - 1).wrapping_sub(a.leading_zeros()) as <f32 as Float>::Int;
+    let significand_bits = <f32>::significand_bits();
+    let implicit_bit = <f32>::implicit_bit();
+    let exponent_bias = <f32>::exponent_bias();
+    let mut result: <f32 as Float>::Int;
+
+    // Shift a into the significand field, rounding if it is a right-shift
+    if exponent <= significand_bits {
+        let shift = significand_bits - exponent;
+        result = (a as <f32 as Float>::Int) << shift ^ implicit_bit;
+    } else {
+        let shift = exponent - significand_bits;
+        result = (a as <f32 as Float>::Int) >> shift ^ implicit_bit;
+        let round = (a as <f32 as Float>::Int).wrapping_shl(type_width.wrapping_sub(shift));
+        if round > sign_bit { result += 1; }
+        if round == sign_bit { result += result & 1; }
+    }
+
+    // Insert the exponent
+    result = result.wrapping_add(((exponent + exponent_bias) as <f32 as Float>::Int) << significand_bits);
+
+    // Insert the sign bit and return
+    <f32>::from_repr(result | sign)
+}
 
 #[cfg(test)]
 mod tests {
