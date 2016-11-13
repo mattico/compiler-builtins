@@ -149,14 +149,14 @@ features = ["c"]
 - [ ] fixunsdfsi.c
 - [ ] fixunssfdi.c
 - [ ] fixunssfsi.c
-- [ ] floatdidf.c
-- [ ] floatdisf.c
-- [ ] floatsidf.c
-- [ ] floatsisf.c
-- [ ] floatundidf.c
-- [ ] floatundisf.c
-- [ ] floatunsidf.c
-- [ ] floatunsisf.c
+- [x] floatdidf.c
+- [x] floatdisf.c
+- [x] floatsidf.c
+- [x] floatsisf.c
+- [x] floatundidf.c
+- [x] floatundisf.c
+- [x] floatunsidf.c
+- [x] floatunsisf.c
 - [ ] i386/ashldi3.S
 - [ ] i386/ashrdi3.S
 - [ ] i386/chkstk.S

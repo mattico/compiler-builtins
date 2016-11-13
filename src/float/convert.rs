@@ -2,6 +2,16 @@ use core::mem;
 
 use float::Float;
 
+// TODO:
+// - [ ] floatdidf
+// - [ ] floatdisf
+// - [ ] floatsidf
+// - [x] floatsisf
+// - [ ] floatundidf
+// - [ ] floatundisf
+// - [ ] floatunsidf
+// - [ ] floatunsisf
+
 /// Implements signed integer to float conversion
 /// using the IEEE-754 default round-to-nearest, ties-to-even mode.
 #[cfg_attr(not(test), no_mangle)]
