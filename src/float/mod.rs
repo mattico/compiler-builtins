@@ -15,6 +15,7 @@ pub trait Float: Sized + Copy
     where Wrapping<Self::Int> : ops::Shl<usize, Output = Wrapping<Self::Int>>
                               + ops::Shr<usize, Output = Wrapping<Self::Int>>
                               + ops::Sub<Wrapping<Self::Int>, Output = Wrapping<Self::Int>>
+                              + ops::Add<Wrapping<Self::Int>, Output = Wrapping<Self::Int>>
                               + ops::BitOr<Wrapping<Self::Int>, Output = Wrapping<Self::Int>>
                               + ops::BitXor<Wrapping<Self::Int>, Output = Wrapping<Self::Int>>,
           Self::Int : convert::From<u32>
@@ -31,21 +32,26 @@ pub trait Float: Sized + Copy
     }
 
     /// Returns the bitwidth of the float type
-    fn bits() -> usize;
+    fn bits() -> Wrapping<Self::Int> {
+        Wrapping(Self::Int::from(mem::size_of::<Self>() as u32 * 8))
+    }
 
     /// Returns the bitwidth of the significand
-    fn significand_bits() -> usize;
+    fn significand_bits() -> Wrapping<Self::Int>;
 
-    fn exponent_bits() -> usize {
-        Self::bits() - Self::significand_bits() - 1
+    /// Returns the bitwidth of the exponent
+    fn exponent_bits() -> Wrapping<Self::Int> {
+        Self::bits() - Self::significand_bits() - Self::one()
     }
 
-    fn max_exponent() -> usize {
-        (1usize << Self::exponent_bits()).wrapping_sub(1)
+    /// Returns the maximum valid exponent value
+    fn max_exponent() -> Wrapping<Self::Int> {
+        (Self::one() << Self::exponent_bits()) - Self::one()
     }
 
-    fn exponent_bias() -> usize {
-        Self::max_exponent() >> 1
+    /// Returns the exponent bias
+    fn exponent_bias() -> Wrapping<Self::Int> {
+        Self::max_exponent() >> Self::one()
     }
 
     fn implicit_bit() -> Wrapping<Self::Int> {
@@ -73,85 +79,41 @@ pub trait Float: Sized + Copy
     }
 
     fn quiet_bit() -> Wrapping<Self::Int> {
-        Self::implicit_bit() >> 1
+        Self::implicit_bit() >> Self::one()
     }
 
     fn qnan_rep() -> Wrapping<Self::Int> {
         Self::exponent_mask() | Self::quiet_bit()
     }
 
-    /// Returns the bitwidth of the exponent
-    fn exponent_bits() -> u32 {
-        Self::bits() - Self::significand_bits() - 1
-    }
-
-    /// Returns the maximum exponent value
-    fn max_exponent() -> Self::Int;
-
-    /// Returns the exponent bias
-    fn exponent_bias() -> Self::Int;
-
-    /// Returns a mask for the sign bit
-    fn sign_mask() -> Self::Int;
-
-    /// Returns a mask for the significand
-    fn significand_mask() -> Self::Int;
-
-    /// Returns a mask for the exponent
-    fn exponent_mask() -> Self::Int;
-
-    /// Returns a mask for the implicit bit (the last bit of the exponent)
-    fn implicit_bit() -> Self::Int; 
-
     /// Returns `self` transmuted to `Self::Int`
-    fn repr(self) -> Self::Int;
+    fn repr(self) -> Wrapping<Self::Int>;
 
-    #[cfg(test)]
     /// Checks if two floats have the same bit representation. *Except* for NaNs! NaN can be
     /// represented in multiple different ways. This method returns `true` if two NaNs are
     /// compared.
+    #[cfg(test)]
     fn eq_repr(self, rhs: Self) -> bool;
 
     /// Returns a `Self::Int` transmuted back to `Self`
-    fn from_repr(a: Self::Int) -> Self;
+    fn from_repr(a: Wrapping<Self::Int>) -> Self;
 
     /// Constructs a `Self` from its parts. Inputs are treated as bits and shifted into position.
-    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self;
+    fn from_parts(sign: bool, exponent: Wrapping<Self::Int>, significand: Wrapping<Self::Int>) -> Self;
 
     /// Returns (normalized exponent, normalized significand)
-    fn normalize(significand: Self::Int) -> (i32, Self::Int);
+    fn normalize(significand: Wrapping<Self::Int>) -> (i32, Wrapping<Self::Int>);
 }
 
 // FIXME: Some of this can be removed if RFC Issue #1424 is resolved
 //        https://github.com/rust-lang/rfcs/issues/1424
 impl Float for f32 {
     type Int = u32;
-    fn bits() -> usize {
-        32
+    fn significand_bits() -> Wrapping<Self::Int> {
+        Wrapping(Self::Int::from(23))
     }
-    fn significand_bits() -> usize {
-        23
-    }
-    fn sign_mask() -> Self::Int {
-        1 << (Self::bits() - 1)
-    }
-    fn significand_mask() -> Self::Int {
-        (1 << Self::significand_bits()) - 1
-    }
-    fn exponent_mask() -> Self::Int {
-        !(Self::sign_mask() | Self::significand_mask())
-    }
-    fn max_exponent() -> Self::Int {
-        (1 << Self::exponent_bits()) - 1
-    }
-    fn exponent_bias() -> Self::Int {
-        Self::max_exponent() >> 1
-    }
-    fn implicit_bit() -> Self::Int {
-        1 << Self::significand_bits()
-    }
-    fn repr(self) -> Self::Int {
-        unsafe { mem::transmute(self) }
+    fn repr(self) -> Wrapping<Self::Int> {
+        Wrapping(unsafe { mem::transmute(self) })
     }
     #[cfg(test)]
     fn eq_repr(self, rhs: Self) -> bool {
@@ -161,16 +123,16 @@ impl Float for f32 {
             self.repr() == rhs.repr()
         }
     }
-    fn from_repr(a: Self::Int) -> Self {
-        unsafe { mem::transmute(a) }
+    fn from_repr(a: Wrapping<Self::Int>) -> Self {
+        unsafe { mem::transmute(a.0) }
     }
-    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+    fn from_parts(sign: bool, exponent: Wrapping<Self::Int>, significand: Wrapping<Self::Int>) -> Self {
         Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
             ((exponent << Self::significand_bits()) & Self::exponent_mask()) |
             (significand & Self::significand_mask()))
     }
-    fn normalize(significand: Self::Int) -> (i32, Self::Int) {
-        let shift = significand.leading_zeros()
+    fn normalize(significand: Wrapping<Self::Int>) -> (i32, Wrapping<Self::Int>) {
+        let shift = significand.0.leading_zeros()
             .wrapping_sub((1u32 << Self::significand_bits()).leading_zeros());
         (1i32.wrapping_sub(shift as i32), significand << shift as Self::Int)
     }
@@ -178,31 +140,10 @@ impl Float for f32 {
 
 impl Float for f64 {
     type Int = u64;
-    fn bits() -> usize {
-        64
+    fn significand_bits() -> Wrapping<Self::Int> {
+        Wrapping(Self::Int::from(52))
     }
-    fn significand_bits() -> usize {
-        52
-    }
-    fn sign_mask() -> Self::Int {
-        1 << (Self::bits() - 1)
-    }
-    fn significand_mask() -> Self::Int {
-        (1 << Self::significand_bits()) - 1
-    }
-    fn exponent_mask() -> Self::Int {
-        !(Self::sign_mask() | Self::significand_mask())
-    }
-    fn max_exponent() -> Self::Int {
-        (1 << Self::exponent_bits()) - 1
-    }
-    fn exponent_bias() -> Self::Int {
-        Self::max_exponent() >> 1
-    }
-    fn implicit_bit() -> Self::Int {
-        1 << Self::significand_bits()
-    }
-    fn repr(self) -> Self::Int {
+    fn repr(self) -> Wrapping<Self::Int> {
         unsafe { mem::transmute(self) }
     }
     #[cfg(test)]
@@ -213,15 +154,15 @@ impl Float for f64 {
             self.repr() == rhs.repr()
         }
     }
-    fn from_repr(a: Self::Int) -> Self {
+    fn from_repr(a: Wrapping<Self::Int>) -> Self {
         unsafe { mem::transmute(a) }
     }
-    fn from_parts(sign: bool, exponent: Self::Int, significand: Self::Int) -> Self {
+    fn from_parts(sign: bool, exponent: Wrapping<Self::Int>, significand: Wrapping<Self::Int>) -> Self {
         Self::from_repr(((sign as Self::Int) << (Self::bits() - 1)) |
             ((exponent << Self::significand_bits()) & Self::exponent_mask()) |
             (significand & Self::significand_mask()))
     }
-    fn normalize(significand: Self::Int) -> (i32, Self::Int) {
+    fn normalize(significand: Wrapping<Self::Int>) -> (i32, Wrapping<Self::Int>) {
         let shift = significand.leading_zeros()
             .wrapping_sub((1u64 << Self::significand_bits()).leading_zeros());
         (1i32.wrapping_sub(shift as i32), significand << shift as Self::Int)

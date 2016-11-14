@@ -9,22 +9,22 @@ macro_rules! add {
         #[allow(unused_parens)]
         #[cfg_attr(not(test), no_mangle)]
         pub extern fn $intrinsic(a: $ty, b: $ty) -> $ty {
-            let one = Wrapping(1 as <$ty as Float>::Int);
-            let zero = Wrapping(0 as <$ty as Float>::Int);
+            let one =              <$ty>::one();
+            let zero =             <$ty>::zero();
 
             let bits =             Wrapping(<$ty>::bits() as <$ty as Float>::Int);
             let significand_bits = Wrapping(<$ty>::significand_bits() as <$ty as Float>::Int);
-            let exponent_bits =    bits - significand_bits - one;
-            let max_exponent =     (one << exponent_bits.0 as usize) - one;
+            let exponent_bits =    Wrapping(<$ty>::exponent_bits() as <$ty as Float>::Int);
+            let max_exponent =     Wrapping(<$ty>::max_exponent()  as <$ty as Float>::Int);
 
-            let implicit_bit =     Wrapping(<$ty>::implicit_bit() as <$ty as Float>::Int);
-            let significand_mask = implicit_bit - one;
-            let sign_bit =         one << (significand_bits + exponent_bits).0 as usize;
-            let abs_mask =         sign_bit - one;
-            let exponent_mask =    abs_mask ^ significand_mask;
-            let inf_rep =          exponent_mask;
-            let quiet_bit =        implicit_bit >> 1;
-            let qnan_rep =         exponent_mask | quiet_bit;
+            let implicit_bit =     <$ty>::implicit_bit();
+            let significand_mask = <$ty>::significand_mask();
+            let sign_bit =         <$ty>::sign_bit();
+            let abs_mask =         <$ty>::abs_mask();
+            let exponent_mask =    <$ty>::exponent_mask();
+            let inf_rep =          <$ty>::inf_rep();
+            let quiet_bit =        <$ty>::quiet_bit();
+            let qnan_rep =         <$ty>::qnan_rep();
 
             let mut a_rep = Wrapping(a.repr());
             let mut b_rep = Wrapping(b.repr());
