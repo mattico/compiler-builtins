@@ -1,3 +1,6 @@
+#[cfg(all(target_feature = "vfp2"))]
+pub mod vfp;
+
 use core::intrinsics;
 
 #[cfg(feature = "mem")]
@@ -255,3 +258,4 @@ mod tests {
         }
     }
 }
+
