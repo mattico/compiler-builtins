@@ -4174,8 +4174,6 @@ mod c {
             if target_arch == "x86" {
                 sources.extend(
                     &[
-                        "i386/ashldi3.S",
-                        "i386/ashrdi3.S",
                         "i386/divdi3.S",
                         "i386/floatdidf.S",
                         "i386/floatdisf.S",
@@ -4183,7 +4181,6 @@ mod c {
                         "i386/floatundidf.S",
                         "i386/floatundisf.S",
                         "i386/floatundixf.S",
-                        "i386/lshrdi3.S",
                         "i386/moddi3.S",
                         "i386/muldi3.S",
                         "i386/udivdi3.S",

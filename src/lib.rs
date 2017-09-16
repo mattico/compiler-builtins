@@ -11,6 +11,7 @@
 #![feature(asm)]
 #![feature(compiler_builtins)]
 #![feature(core_intrinsics)]
+#![feature(cfg_target_feature)]
 #![feature(naked_functions)]
 #![feature(staged_api)]
 #![feature(i128_type)]

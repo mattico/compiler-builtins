@@ -157,12 +157,12 @@ features = ["c"]
 - [ ] floatundisf.c
 - [x] floatunsidf.c
 - [x] floatunsisf.c
-- [ ] i386/ashldi3.S
-- [ ] i386/ashrdi3.S
+- [x] i386/ashldi3.S
+- [x] i386/ashrdi3.S
 - [x] i386/chkstk.S
 - [x] i386/chkstk2.S
 - [ ] i386/divdi3.S
-- [ ] i386/lshrdi3.S
+- [x] i386/lshrdi3.S
 - [ ] i386/moddi3.S
 - [ ] i386/muldi3.S
 - [ ] i386/udivdi3.S
@@ -171,14 +171,14 @@ features = ["c"]
 - [x] moddi3.c
 - [x] modsi3.c
 - [ ] muldf3.c
+- [ ] mulsf3.c
 - [x] muldi3.c
 - [x] mulodi4.c
 - [x] mulosi4.c
-- [ ] mulsf3.c
 - [x] powidf2.c
 - [x] powisf2.c
-- [ ] subdf3.c
-- [ ] subsf3.c
+- [x] subdf3.c
+- [x] subsf3.c
 - [ ] truncdfhf2.c
 - [ ] truncdfsf2.c
 - [ ] truncsfhf2.c
